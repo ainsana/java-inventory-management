@@ -11,6 +11,8 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import util.SqlIdentifierValidator;
+
 public class DBDAO {
 	
 	//Metodi Gestione DB
@@ -18,11 +20,15 @@ public class DBDAO {
         try {
         	Connection tempConn = DriverManager.getConnection("jdbc:mysql://" + host + "/", username, password);
         	Statement tempStmt = tempConn.createStatement();
-        	tempStmt.executeUpdate("CREATE DATABASE " + nomeDB);
+            tempStmt.executeUpdate(
+                "CREATE DATABASE " + SqlIdentifierValidator.quote(nomeDB)
+            );
         	DBConnection.configuraConDB(host, nomeDB, username, password);
             Connection conn = DBConnection.getConnection();
             Statement stmt = conn.createStatement();                                             
-            stmt.execute("USE " + nomeDB);             
+            stmt.execute(
+                "USE " + SqlIdentifierValidator.quote(nomeDB)
+            );
         	stmt.executeUpdate("CREATE TABLE IF NOT EXISTS utenti (" +
           		  "id INT AUTO_INCREMENT PRIMARY KEY, " +
           		  "username VARCHAR(50) UNIQUE NOT NULL, " +
@@ -38,8 +44,10 @@ public class DBDAO {
     
 	public static boolean svuotaDB(String nomeDB) {
 	    try (Connection conn = DBConnection.getConnection();
-	         Statement stmt = conn.createStatement()) {
-	    	stmt.execute("USE " + nomeDB);
+	        Statement stmt = conn.createStatement()) {
+            stmt.execute(
+                "USE " + SqlIdentifierValidator.quote(nomeDB)
+            );
 	        List<String> tabelle = new java.util.ArrayList<>();
 	        try (ResultSet rs = stmt.executeQuery("SHOW TABLES")) {
 	            while (rs.next()) {
@@ -47,7 +55,9 @@ public class DBDAO {
 	            }
 	        }
 	        for (String tabella : tabelle) {
-	            stmt.executeUpdate("DROP TABLE IF EXISTS " + tabella);
+	            stmt.executeUpdate(
+                    "DROP TABLE IF EXISTS " + SqlIdentifierValidator.quote(tabella)
+                );
 	        }
 	        return true;
 	    } catch (SQLException e) {
@@ -59,7 +69,9 @@ public class DBDAO {
 	public static boolean eliminaDB(String host, String username, String password, String nomeDB) {
 	    try (var conn = DriverManager.getConnection("jdbc:mysql://" + host + "/", username, password);
 	         var stmt = conn.createStatement()) {
-	        stmt.executeUpdate("DROP DATABASE IF EXISTS " + nomeDB);
+	        stmt.executeUpdate(
+                "DROP DATABASE IF EXISTS " + SqlIdentifierValidator.quote(nomeDB)
+            );
 	        return true;
 	    } catch (SQLException e) {
 	        e.printStackTrace();
@@ -70,9 +82,14 @@ public class DBDAO {
 	//Metodi Gestione Tabelle
     public boolean creaTabella(String host, String username, String password, String nomeDB, String nomeTabella) {
         try {
+            SqlIdentifierValidator.requireValid(nomeDB);
+
         	Connection conn = DriverManager.getConnection("jdbc:mysql://" + host + "/" + nomeDB, username, password);
             Statement stmt = conn.createStatement();
-            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS " + nomeTabella + " (" +
+            stmt.executeUpdate(
+                "CREATE TABLE IF NOT EXISTS "
+                + SqlIdentifierValidator.quote(nomeTabella)
+                + " (" +
             		"id INT AUTO_INCREMENT PRIMARY KEY," +
             		"nome VARCHAR(100)," +
             		"categoria VARCHAR(50)," +
@@ -94,7 +111,9 @@ public class DBDAO {
         try {
             Connection conn = DBConnection.getConnection();
             Statement stmt = conn.createStatement();
-            stmt.executeUpdate("DROP TABLE IF EXISTS " + nomeTabella);
+            stmt.executeUpdate(
+                "DROP TABLE IF EXISTS " + SqlIdentifierValidator.quote(nomeTabella)
+            );
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -106,7 +125,9 @@ public class DBDAO {
         try {
             Connection conn = DBConnection.getConnection();
             Statement stmt = conn.createStatement();
-            stmt.executeUpdate("DELETE FROM " + nomeTabella);
+            stmt.executeUpdate(
+                "DELETE FROM " + SqlIdentifierValidator.quote(nomeTabella)
+            );
             return true;
         } catch (Exception e) {
             e.printStackTrace();

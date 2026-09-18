@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.*;
 
+import util.SqlIdentifierValidator;
+
 public class ProdottoDAO {
     
 	//Variabile private Tabella Attiva
@@ -21,7 +23,7 @@ public class ProdottoDAO {
         if (tabellaAttiva == null) return false;
         try {
             Connection conn = DBConnection.getConnection();
-            String sql = "INSERT INTO " + tabellaAttiva +
+            String sql = "INSERT INTO " + SqlIdentifierValidator.quote(tabellaAttiva) +
                          " (nome, categoria, taglia, tipologia, colori, quantita, prezzoAcquisto, prezzoVendita) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, p.getNome());
@@ -64,7 +66,9 @@ public class ProdottoDAO {
     }
 
     public boolean aggiornaProdotto(Prodotto p) {
-        String query = "UPDATE " + tabellaAttiva + " SET nome = ?, categoria = ?, taglia = ?, tipologia = ?, colori = ?, quantita = ?, prezzoAcquisto = ?, prezzoVendita = ? WHERE id = ?";
+        if (tabellaAttiva == null) return false;
+        String query = "UPDATE " + SqlIdentifierValidator.quote(tabellaAttiva)
+            + " SET nome = ?, categoria = ?, taglia = ?, tipologia = ?, colori = ?, quantita = ?, prezzoAcquisto = ?, prezzoVendita = ? WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
@@ -87,7 +91,8 @@ public class ProdottoDAO {
     
     public boolean eliminaProdotto(int id) {
         if (tabellaAttiva == null) return false;
-        String query = "DELETE FROM " + tabellaAttiva + " WHERE id = ?";
+        String query = "DELETE FROM " + SqlIdentifierValidator.quote(tabellaAttiva)
+            + " WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, id);
@@ -161,7 +166,9 @@ public class ProdottoDAO {
         try {
             Connection conn = DBConnection.getConnection();
             Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT * FROM " + tabellaAttiva);
+            ResultSet rs = stmt.executeQuery(
+                "SELECT * FROM " + SqlIdentifierValidator.quote(tabellaAttiva)
+            );
             while (rs.next()) {
                 Prodotto p = fromResultSet(rs);
                 lista.add(p);
@@ -173,7 +180,9 @@ public class ProdottoDAO {
     }
     
     public Prodotto getProdottoById(int id) {
-        String query = "SELECT * FROM " + tabellaAttiva + " WHERE id = ?";
+        if (tabellaAttiva == null) return null;
+        String query = "SELECT * FROM " + SqlIdentifierValidator.quote(tabellaAttiva)
+            + " WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, id);
@@ -191,6 +200,10 @@ public class ProdottoDAO {
     public String getTabellaAttiva() {
         return tabellaAttiva; }
     public void setTabellaAttiva(String tabella) {
-        this.tabellaAttiva = tabella; }    
+        if (tabella != null) {
+            SqlIdentifierValidator.requireValid(tabella);
+        }
+        this.tabellaAttiva = tabella;
+    }
 
 }
