@@ -13,14 +13,14 @@ public class LoginView extends JFrame {
     private JTextField userField = new JTextField();
     private JPasswordField passwordField = new JPasswordField();
     private JTextField dbField = new JTextField();
-    private JButton loginButton = new JButton("Login");
+    private JButton loginButton = new JButton("Connetti");
     private JTextArea esitoArea = new JTextArea(3, 30);
     private LoginController controller;
     private Runnable onLoginSuccess;
 
     //Costruttore
     public LoginView() {
-        setTitle("Login");
+        setTitle("Connessione database");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(400, 300);
         setLayout(new BorderLayout());
@@ -31,9 +31,9 @@ public class LoginView extends JFrame {
         JPanel inputPanel = new JPanel(new GridLayout(5, 2));
         inputPanel.add(new JLabel("Host:"));
         inputPanel.add(hostField);
-        inputPanel.add(new JLabel("Username:"));
+        inputPanel.add(new JLabel("Utente MySQL:"));
         inputPanel.add(userField);
-        inputPanel.add(new JLabel("Password:"));
+        inputPanel.add(new JLabel("Password MySQL:"));
         inputPanel.add(passwordField);
         inputPanel.add(new JLabel("Database (opzionale):"));
         inputPanel.add(dbField);

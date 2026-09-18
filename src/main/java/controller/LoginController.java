@@ -1,48 +1,58 @@
 package controller;
 
 import dao.DBConnection;
-import dao.LoginDAO;
 import view.LoginView;
 
 import java.sql.SQLException;
 
 public class LoginController {
-	
-	//Variabili private
-	private LoginView view;
-    private LoginDAO loginDAO;
 
-    //Costruttore
+    private LoginView view;
+
     public LoginController(LoginView view) {
         this.view = view;
-        this.loginDAO = new LoginDAO();
     }
 
-    //Metodo Login
-    public void login(String host, String username, String password, String database) {
+    public void login(
+            String host,
+            String username,
+            String password,
+            String database
+    ) {
         try {
-            if (database != null && !database.isEmpty()) {
-                DBConnection.configuraConDB(host, database, username, password);
-                boolean success = loginDAO.checkLogin(username, password);
-                if (success) {
-                    view.mostraEsito("Login riuscito");
-                    if (view.getOnLoginSuccess() != null) {                    	
-                        view.getOnLoginSuccess().run();
-                    }
-                } else {
-                    view.mostraErrore("Credenziali errate");
+            if (database != null && !database.isBlank()) {
+                DBConnection.configuraConDB(
+                        host,
+                        database,
+                        username,
+                        password
+                );
+
+                view.mostraEsito("Connessione al database riuscita.");
+
+                if (view.getOnLoginSuccess() != null) {
+                    view.getOnLoginSuccess().run();
                 }
             } else {
-                DBConnection.configura(host, username, password);
-                view.mostraEsito("Connessione al server riuscita. Nessun DB selezionato.");
+                DBConnection.configura(
+                        host,
+                        username,
+                        password
+                );
+
+                view.mostraEsito(
+                        "Connessione al server riuscita. Nessun database selezionato."
+                );
+
                 if (view.getOnLoginSuccess() != null) {
                     view.getOnLoginSuccess().run();
                 }
             }
         } catch (SQLException e) {
-            view.mostraErrore("Errore: " + e.getMessage());
+            view.mostraErrore(
+                    "Errore di connessione: " + e.getMessage()
+            );
         }
     }
-    
 }
 

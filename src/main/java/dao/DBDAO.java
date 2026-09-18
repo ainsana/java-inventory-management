@@ -16,31 +16,38 @@ import util.SqlIdentifierValidator;
 public class DBDAO {
 	
 	//Metodi Gestione DB
-	public boolean creaDB(String host, String username, String password, String nomeDB) {
+	public boolean creaDB(
+            String host,
+            String username,
+            String password,
+            String nomeDB
+    ) {
         try {
-        	Connection tempConn = DriverManager.getConnection("jdbc:mysql://" + host + "/", username, password);
-        	Statement tempStmt = tempConn.createStatement();
+            Connection tempConn = DriverManager.getConnection(
+                "jdbc:mysql://" + host + "/",
+                username,
+                password
+            );
+
+            Statement tempStmt = tempConn.createStatement();
+
             tempStmt.executeUpdate(
                 "CREATE DATABASE " + SqlIdentifierValidator.quote(nomeDB)
             );
-        	DBConnection.configuraConDB(host, nomeDB, username, password);
-            Connection conn = DBConnection.getConnection();
-            Statement stmt = conn.createStatement();                                             
-            stmt.execute(
-                "USE " + SqlIdentifierValidator.quote(nomeDB)
+
+            DBConnection.configuraConDB(
+                host,
+                nomeDB,
+                username,
+                password
             );
-        	stmt.executeUpdate("CREATE TABLE IF NOT EXISTS utenti (" +
-          		  "id INT AUTO_INCREMENT PRIMARY KEY, " +
-          		  "username VARCHAR(50) UNIQUE NOT NULL, " +
-          		  "password VARCHAR(255) NOT NULL)"
-          		);        	        	
-            stmt.executeUpdate("INSERT INTO utenti (username, password) VALUES ('" + username + "', '" + password + "')");            
-            return true;        	
+
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
-        }        
-	}
+        }
+    }
     
 	public static boolean svuotaDB(String nomeDB) {
 	    try (Connection conn = DBConnection.getConnection();
