@@ -7,7 +7,6 @@ import java.util.List;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.Statement;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -16,31 +15,16 @@ import util.SqlIdentifierValidator;
 public class DBDAO {
 	
 	//Metodi Gestione DB
-	public boolean creaDB(
-            String host,
-            String username,
-            String password,
-            String nomeDB
-    ) {
-        try {
-            Connection tempConn = DriverManager.getConnection(
-                "jdbc:mysql://" + host + "/",
-                username,
-                password
-            );
-
-            Statement tempStmt = tempConn.createStatement();
-
-            tempStmt.executeUpdate(
+	public boolean creaDB(String nomeDB) {
+        try (
+                Connection conn = DBConnection.getServerConnection();
+                Statement stmt = conn.createStatement()
+        ) {
+            stmt.executeUpdate(
                 "CREATE DATABASE " + SqlIdentifierValidator.quote(nomeDB)
             );
 
-            DBConnection.configuraConDB(
-                host,
-                nomeDB,
-                username,
-                password
-            );
+            DBConnection.selezionaDB(nomeDB);
 
             return true;
         } catch (Exception e) {
@@ -73,41 +57,53 @@ public class DBDAO {
 	    }
 	}
 
-	public static boolean eliminaDB(String host, String username, String password, String nomeDB) {
-	    try (var conn = DriverManager.getConnection("jdbc:mysql://" + host + "/", username, password);
-	         var stmt = conn.createStatement()) {
-	        stmt.executeUpdate(
-                "DROP DATABASE IF EXISTS " + SqlIdentifierValidator.quote(nomeDB)
+	public static boolean eliminaDB(String nomeDB) {
+        try (
+                Connection conn = DBConnection.getServerConnection();
+                Statement stmt = conn.createStatement()
+        ) {
+            stmt.executeUpdate(
+                    "DROP DATABASE IF EXISTS "
+                    + SqlIdentifierValidator.quote(nomeDB)
             );
-	        return true;
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	        return false;
-	    }
-	}
-    
+
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 	//Metodi Gestione Tabelle
-    public boolean creaTabella(String host, String username, String password, String nomeDB, String nomeTabella) {
+    public boolean creaTabella(
+            String nomeDB,
+            String nomeTabella
+    ) {
         try {
             SqlIdentifierValidator.requireValid(nomeDB);
 
-        	Connection conn = DriverManager.getConnection("jdbc:mysql://" + host + "/" + nomeDB, username, password);
-            Statement stmt = conn.createStatement();
-            stmt.executeUpdate(
-                "CREATE TABLE IF NOT EXISTS "
-                + SqlIdentifierValidator.quote(nomeTabella)
-                + " (" +
-            		"id INT AUTO_INCREMENT PRIMARY KEY," +
-            		"nome VARCHAR(100)," +
-            		"categoria VARCHAR(50)," +
-            		"taglia VARCHAR(20)," +
-            		"tipologia VARCHAR(20)," +
-            		"colori VARCHAR(200)," +
-            		"quantita INT," +
-            		"prezzoAcquisto DOUBLE," +
-            		"prezzoVendita DOUBLE)" 
-            		);
-            return true;
+            try (
+                Connection conn =
+                        DBConnection.getConnectionForDatabase(nomeDB);
+                Statement stmt = conn.createStatement()
+            ) {
+                stmt.executeUpdate(
+                    "CREATE TABLE IF NOT EXISTS "
+                    + SqlIdentifierValidator.quote(nomeTabella)
+                    + " ("
+                    + "id INT AUTO_INCREMENT PRIMARY KEY,"
+                    + "nome VARCHAR(100),"
+                    + "categoria VARCHAR(50),"
+                    + "taglia VARCHAR(20),"
+                    + "tipologia VARCHAR(20),"
+                    + "colori VARCHAR(200),"
+                    + "quantita INT,"
+                    + "prezzoAcquisto DOUBLE,"
+                    + "prezzoVendita DOUBLE)"
+                );
+
+                return true;
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -115,12 +111,15 @@ public class DBDAO {
     }
 
     public boolean eliminaTabella(String nomeTabella) throws SQLException {
-        try {
-            Connection conn = DBConnection.getConnection();
-            Statement stmt = conn.createStatement();
+        try (
+                Connection conn = DBConnection.getConnection();
+                Statement stmt = conn.createStatement()
+        ) {
             stmt.executeUpdate(
-                "DROP TABLE IF EXISTS " + SqlIdentifierValidator.quote(nomeTabella)
+                    "DROP TABLE IF EXISTS "
+                    + SqlIdentifierValidator.quote(nomeTabella)
             );
+
             return true;
         } catch (Exception e) {
             e.printStackTrace();

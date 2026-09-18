@@ -42,7 +42,7 @@ public class DBController {
         dialog.setVisible(true);
         String nomeDB = dialog.getNomeDB();
         if (nomeDB != null && !nomeDB.isEmpty()) {
-            boolean success = dao.creaDB(DBConnection.getHost(), DBConnection.getUsername(), DBConnection.getPassword(), nomeDB);
+            boolean success = dao.creaDB(nomeDB);
             if (success) {
                 JOptionPane.showMessageDialog(view, "Database creato correttamente!");
                 aggiornaListaDB();
@@ -69,7 +69,7 @@ public class DBController {
         }
 
         try {
-            DBConnection.configuraConDB(DBConnection.getHost(), dbSelezionato, DBConnection.getUsername(), DBConnection.getPassword());
+            DBConnection.selezionaDB(dbSelezionato);
             JOptionPane.showMessageDialog(view, "Database '" + dbSelezionato + "' selezionato");
             aggiornaListaTabelle(dbSelezionato);
         } catch (SQLException e) {
@@ -90,8 +90,7 @@ public class DBController {
 
         if (conferma == JOptionPane.YES_OPTION) {
             try {
-                DBConnection.configuraConDB(DBConnection.getHost(), dbSelezionato,
-                                            DBConnection.getUsername(), DBConnection.getPassword());
+                DBConnection.selezionaDB(dbSelezionato);
                 boolean ok = DBDAO.svuotaDB(dbSelezionato);
                 if (ok) {
                     JOptionPane.showMessageDialog(view, "Database svuotato con successo!");
@@ -118,12 +117,11 @@ public class DBController {
                 "Conferma eliminazione", JOptionPane.YES_NO_OPTION);
 
         if (conferma == JOptionPane.YES_OPTION) {
-            boolean ok = DBDAO.eliminaDB(DBConnection.getHost(), DBConnection.getUsername(),
-                                               DBConnection.getPassword(), dbSelezionato);
+            boolean ok = DBDAO.eliminaDB(dbSelezionato);
             if (ok) {
                 JOptionPane.showMessageDialog(view, "Database eliminato con successo!");
                 try {
-                    DBConnection.configura(DBConnection.getHost(), DBConnection.getUsername(), DBConnection.getPassword());
+                    DBConnection.selezionaServer();
                 } catch (SQLException ex) {
                 	JOptionPane.showMessageDialog(view, "Errore connessione: " + ex.getMessage());
                 }
@@ -146,9 +144,6 @@ public class DBController {
 
         String nomeTabella = dialog.getNomeTabella();
         if (nomeTabella != null && !nomeTabella.isEmpty()) {
-            String host = DBConnection.getHost();
-            String username = DBConnection.getUsername();
-            String password = DBConnection.getPassword();
             String nomeDB = DBConnection.getNomeDB();
 
             if (nomeDB == null) {
@@ -156,7 +151,7 @@ public class DBController {
                 return;
             }
 
-            boolean success = dao.creaTabella(host, username, password, nomeDB, nomeTabella);
+            boolean success = dao.creaTabella(nomeDB, nomeTabella);
             if (success) {
                 JOptionPane.showMessageDialog(view, "Tabella creata con successo.");
                 aggiornaListaTabelle(nomeDB);
