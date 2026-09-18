@@ -10,7 +10,6 @@ public final class DBConnection {
     private static String username;
     private static String password;
     private static String nomeDB;
-    private static Connection connection;
 
     private DBConnection() {
         // Utility class
@@ -21,14 +20,13 @@ public final class DBConnection {
             String username,
             String password
     ) throws SQLException {
-        closeCurrentConnection();
+
+        testServerConnection(host, username, password);
 
         DBConnection.host = host;
         DBConnection.username = username;
         DBConnection.password = password;
         DBConnection.nomeDB = null;
-
-        connection = openServerConnection();
     }
 
     public static void configuraConDB(
@@ -37,29 +35,37 @@ public final class DBConnection {
             String username,
             String password
     ) throws SQLException {
-        closeCurrentConnection();
+
+        testDatabaseConnection(
+                host,
+                nomeDB,
+                username,
+                password
+        );
 
         DBConnection.host = host;
         DBConnection.username = username;
         DBConnection.password = password;
         DBConnection.nomeDB = nomeDB;
-
-        connection = openDatabaseConnection(nomeDB);
     }
 
     public static void selezionaDB(String nomeDB) throws SQLException {
         ensureConfigured();
-        closeCurrentConnection();
 
-        connection = openDatabaseConnection(nomeDB);
+        try (Connection ignored = openDatabaseConnection(nomeDB)) {
+            // Connection successfully validated.
+        }
+
         DBConnection.nomeDB = nomeDB;
     }
 
     public static void selezionaServer() throws SQLException {
         ensureConfigured();
-        closeCurrentConnection();
 
-        connection = openServerConnection();
+        try (Connection ignored = openServerConnection()) {
+            // Connection successfully validated.
+        }
+
         nomeDB = null;
     }
 
@@ -81,16 +87,13 @@ public final class DBConnection {
     public static Connection getConnection() throws SQLException {
         ensureConfigured();
 
-        if (connection == null || connection.isClosed()) {
-            connection = nomeDB == null
-                    ? openServerConnection()
-                    : openDatabaseConnection(nomeDB);
-        }
-
-        return connection;
+        return nomeDB == null
+                ? openServerConnection()
+                : openDatabaseConnection(nomeDB);
     }
 
-    private static Connection openServerConnection() throws SQLException {
+    private static Connection openServerConnection()
+            throws SQLException {
         return DriverManager.getConnection(
                 "jdbc:mysql://" + host + "/",
                 username,
@@ -107,17 +110,44 @@ public final class DBConnection {
         );
     }
 
-    private static void ensureConfigured() throws SQLException {
-        if (host == null || username == null || password == null) {
-            throw new SQLException("Configurazione database non disponibile.");
+    private static void testServerConnection(
+            String host,
+            String username,
+            String password
+    ) throws SQLException {
+        try (
+                Connection ignored = DriverManager.getConnection(
+                        "jdbc:mysql://" + host + "/",
+                        username,
+                        password
+                )
+        ) {
+            // Credentials successfully validated.
         }
     }
 
-    private static void closeCurrentConnection() throws SQLException {
-        if (connection != null && !connection.isClosed()) {
-            connection.close();
+    private static void testDatabaseConnection(
+            String host,
+            String database,
+            String username,
+            String password
+    ) throws SQLException {
+        try (
+                Connection ignored = DriverManager.getConnection(
+                        "jdbc:mysql://" + host + "/" + database,
+                        username,
+                        password
+                )
+        ) {
+            // Database connection successfully validated.
         }
+    }
 
-        connection = null;
+    private static void ensureConfigured() throws SQLException {
+        if (host == null || username == null || password == null) {
+            throw new SQLException(
+                    "Configurazione database non disponibile."
+            );
+        }
     }
 }

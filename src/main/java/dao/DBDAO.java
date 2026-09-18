@@ -128,12 +128,14 @@ public class DBDAO {
     }
 
     public boolean svuotaTabella(String nomeTabella) throws SQLException {
-        try {
-            Connection conn = DBConnection.getConnection();
-            Statement stmt = conn.createStatement();
+        try (
+                Connection conn = DBConnection.getConnection();
+                Statement stmt = conn.createStatement()
+        ) {
             stmt.executeUpdate(
-                "DELETE FROM " + SqlIdentifierValidator.quote(nomeTabella)
+                    "DELETE FROM " + SqlIdentifierValidator.quote(nomeTabella)
             );
+
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -142,37 +144,89 @@ public class DBDAO {
     }
     
     //Metodo Compatibilità
-    public static boolean isTabellaCompatibile(String tabella) throws SQLException {
-        Connection conn = DBConnection.getConnection();
-        DatabaseMetaData meta = conn.getMetaData();
-        ResultSet rs = meta.getColumns(null, null, tabella, null);
-        List<String> colonneRichieste = List.of("id", "nome", "categoria", "taglia", "tipologia", "colori", "quantita", "prezzoAcquisto", "prezzoVendita");
+    public static boolean isTabellaCompatibile(String tabella)
+            throws SQLException {
+
+        List<String> colonneRichieste = List.of(
+                "id",
+                "nome",
+                "categoria",
+                "taglia",
+                "tipologia",
+                "colori",
+                "quantita",
+                "prezzoAcquisto",
+                "prezzoVendita"
+        );
+
         List<String> colonnePresenti = new ArrayList<>();
-        while (rs.next()) {
-            colonnePresenti.add(rs.getString("COLUMN_NAME"));
+
+        try (Connection conn = DBConnection.getConnection()) {
+            DatabaseMetaData meta = conn.getMetaData();
+
+            try (
+                    ResultSet rs = meta.getColumns(
+                            null,
+                            null,
+                            tabella,
+                            null
+                    )
+            ) {
+                while (rs.next()) {
+                    colonnePresenti.add(
+                            rs.getString("COLUMN_NAME")
+                    );
+                }
+            }
         }
+
         return colonnePresenti.containsAll(colonneRichieste);
     }
     
     //Getters Liste DB e Tabelle
     public static List<String> getListaDB() throws SQLException {
         List<String> listaDB = new ArrayList<>();
-        Connection conn = DBConnection.getConnection();
-        ResultSet rs = conn.getMetaData().getCatalogs();
-        while (rs.next()) {
-            listaDB.add(rs.getString(1));
+
+        try (
+                Connection conn = DBConnection.getConnection();
+                ResultSet rs = conn.getMetaData().getCatalogs()
+        ) {
+            while (rs.next()) {
+                listaDB.add(rs.getString(1));
+            }
         }
+
         return listaDB;
     }
         
-    public static List<String> getListaTabelle(String nomeDB) throws SQLException {
+    public static List<String> getListaTabelle(String nomeDB)
+            throws SQLException {
+
+        SqlIdentifierValidator.requireValid(nomeDB);
+
         List<String> listaTabelle = new ArrayList<>();
-        Connection conn = DBConnection.getConnection();
-        DatabaseMetaData meta = conn.getMetaData();
-        ResultSet rs = meta.getTables(nomeDB, null, "%", new String[] { "TABLE" });
-        while (rs.next()) {
-            listaTabelle.add(rs.getString("TABLE_NAME"));
+
+        try (Connection conn =
+                    DBConnection.getConnectionForDatabase(nomeDB)) {
+
+            DatabaseMetaData meta = conn.getMetaData();
+
+            try (
+                    ResultSet rs = meta.getTables(
+                            nomeDB,
+                            null,
+                            "%",
+                            new String[] { "TABLE" }
+                    )
+            ) {
+                while (rs.next()) {
+                    listaTabelle.add(
+                            rs.getString("TABLE_NAME")
+                    );
+                }
+            }
         }
+
         return listaTabelle;
     }
     

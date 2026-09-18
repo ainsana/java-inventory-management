@@ -21,19 +21,40 @@ public class ProdottoDAO {
     //Metodi Gestione Prodotto
     public boolean inserisciProdotto(Prodotto p) {
         if (tabellaAttiva == null) return false;
-        try {
-            Connection conn = DBConnection.getConnection();
-            String sql = "INSERT INTO " + SqlIdentifierValidator.quote(tabellaAttiva) +
-                         " (nome, categoria, taglia, tipologia, colori, quantita, prezzoAcquisto, prezzoVendita) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-            PreparedStatement ps = conn.prepareStatement(sql);
+
+        String sql = "INSERT INTO "
+                + SqlIdentifierValidator.quote(tabellaAttiva)
+                + " (nome, categoria, taglia, tipologia, colori, quantita, "
+                + "prezzoAcquisto, prezzoVendita) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (
+                Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
             ps.setString(1, p.getNome());
             ps.setString(2, p.getCategoria().name());
-            ps.setString(3, p.getTaglia() != null ? p.getTaglia().name() : null);
-            ps.setString(4, p.getTipologia() != null ? p.getTipologia().name() : null);
-            ps.setString(5, String.join(",", p.getColori().stream().map(Enum::name).toList()));
+            ps.setString(
+                    3,
+                    p.getTaglia() != null ? p.getTaglia().name() : null
+            );
+            ps.setString(
+                    4,
+                    p.getTipologia() != null ? p.getTipologia().name() : null
+            );
+            ps.setString(
+                    5,
+                    String.join(
+                            ",",
+                            p.getColori().stream()
+                                    .map(Enum::name)
+                                    .toList()
+                    )
+            );
             ps.setInt(6, p.getQuantita());
             ps.setDouble(7, p.getPrezzoAcquisto());
             ps.setDouble(8, p.getPrezzoVendita());
+
             ps.executeUpdate();
             return true;
         } catch (Exception e) {
@@ -162,37 +183,49 @@ public class ProdottoDAO {
     //Getters Prodotti
     public List<Prodotto> getListaProdotti() {
         List<Prodotto> lista = new ArrayList<>();
+
         if (tabellaAttiva == null) return lista;
-        try {
-            Connection conn = DBConnection.getConnection();
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(
-                "SELECT * FROM " + SqlIdentifierValidator.quote(tabellaAttiva)
-            );
+
+        String query = "SELECT * FROM "
+                + SqlIdentifierValidator.quote(tabellaAttiva);
+
+        try (
+                Connection conn = DBConnection.getConnection();
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(query)
+        ) {
             while (rs.next()) {
-                Prodotto p = fromResultSet(rs);
-                lista.add(p);
+                lista.add(fromResultSet(rs));
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         return lista;
     }
     
     public Prodotto getProdottoById(int id) {
         if (tabellaAttiva == null) return null;
-        String query = "SELECT * FROM " + SqlIdentifierValidator.quote(tabellaAttiva)
-            + " WHERE id = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+        String query = "SELECT * FROM "
+                + SqlIdentifierValidator.quote(tabellaAttiva)
+                + " WHERE id = ?";
+
+        try (
+                Connection conn = DBConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(query)
+        ) {
             stmt.setInt(1, id);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return fromResultSet(rs); 
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return fromResultSet(rs);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return null;
     }
     
