@@ -1,0 +1,34 @@
+﻿# Maven
+target/
+
+# Compiled Java
+*.class
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# Operating system
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+*~
+
+# Local configuration / secrets
+.env
+*.local.properties
+config.properties
