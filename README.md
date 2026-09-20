@@ -1,4 +1,4 @@
-﻿# Java Inventory Management
+# Java Inventory Management
 
 Desktop inventory management application developed in Java with Swing, JDBC and MySQL.
 
