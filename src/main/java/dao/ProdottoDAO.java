@@ -126,31 +126,61 @@ public class ProdottoDAO {
     
     //Metodi Import/Export CSV
     public boolean importaDaCSV(File file) {
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+        if (tabellaAttiva == null) {
+            return false;
+        }
+
+        boolean almenoUnProdottoImportato = false;
+
+        try (BufferedReader reader =
+                     new BufferedReader(new FileReader(file))) {
+
             String riga;
+
             while ((riga = reader.readLine()) != null) {
+                if (riga.isBlank()) {
+                    continue;
+                }
+
                 String[] campi = riga.split(";");
-                if (campi.length < 8) continue;
+
+                if (campi.length < 8) {
+                    return false;
+                }
 
                 Set<Colore> colori = new HashSet<>();
+
                 if (!campi[4].isEmpty()) {
                     for (String col : campi[4].split(",")) {
                         colori.add(Colore.valueOf(col));
                     }
                 }
 
-                Prodotto p = new Prodotto(0, campi[0],
+                Prodotto p = new Prodotto(
+                        0,
+                        campi[0],
                         Categoria.valueOf(campi[1]),
-                        campi[2].isEmpty() ? null : Taglia.valueOf(campi[2]),
-                        campi[3].isEmpty() ? null : Tipologia.valueOf(campi[3]),
+                        campi[2].isEmpty()
+                                ? null
+                                : Taglia.valueOf(campi[2]),
+                        campi[3].isEmpty()
+                                ? null
+                                : Tipologia.valueOf(campi[3]),
                         colori,
                         Integer.parseInt(campi[5]),
                         Double.parseDouble(campi[6]),
                         Double.parseDouble(campi[7])
                 );
-                inserisciProdotto(p);
+
+                if (!inserisciProdotto(p)) {
+                    return false;
+                }
+
+                almenoUnProdottoImportato = true;
             }
-            return true;
+
+            return almenoUnProdottoImportato;
+
         } catch (Exception e) {
             e.printStackTrace();
             return false;
