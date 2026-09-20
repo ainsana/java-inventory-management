@@ -116,14 +116,11 @@ JDBC connections, statements and result sets are managed using try-with-resource
 
 ## Documentation
 
-Additional project material is available in the [`docs`](docs) directory, including:
+Selected UML diagrams aligned with the current implementation are available in the [`docs/diagrams`](docs/diagrams) directory:
 
-- project documentation;
-- use case diagrams;
-- class diagrams;
-- sequence diagrams.
-
-Some diagrams originate from the original version of the project and may represent earlier application flows.
+- product model and validation constraints;
+- product filtering and sorting flow;
+- inventory table selection flow.
 
 ## Project Status
 
